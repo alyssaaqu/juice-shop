@@ -32,7 +32,8 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'trivy-fs-results.sarif'       
+          sarif_file: 'trivy-fs-results.sarif'  
+          category: 'trivy-fs'     
       
       - name: Scan configs
         uses: aquasecurity/trivy-action@master
@@ -49,7 +50,8 @@ jobs:
         if: always()
         with:
           sarif_file: 'trivy-config-results.sarif'
-
+          category: 'trivy-config'
+          
       # - name: Build Docker image
       #   run: docker build -t juice-shop:security-test . 
 
