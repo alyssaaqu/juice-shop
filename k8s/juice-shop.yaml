@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: juice-shop
+  namespace: juice-shop-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: juice-shop
+  template:
+    metadata:
+      labels:
+        app: juice-shop
+    spec:
+      containers:
+      - name: juice-shop
+        image: bkimminich/juice-shop
+        ports:
+        - containerPort: 3000
+        securityContext:
+          privileged: true
+        volumeMounts:                   
+        - name: docker-socket
+          mountPath: /var/run/docker.sock
+      volumes:                         
+      - name: docker-socket
+        hostPath:
+          path: /var/run/docker.sock
+      serviceAccountName: juice-shop-test-sa
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: juice-shop-service
+  namespace: juice-shop-test
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 3000
+  - name: ssh
+    port: 22
+    targetPort: 22
+  selector:
+    app: juice-shop
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: juice-shop-test-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "serviceaccounts", "serviceaccounts/token"]
+  verbs: ["*"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: juice-shop-test-role-binding
+subjects:
+- kind: ServiceAccount
+  name: juice-shop-test-sa
+  namespace: juice-shop-test
+  apiGroup: ""
+roleRef:
+  kind: ClusterRole
+  name: juice-shop-test-role
+  apiGroup: ""
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: juice-shop-test-sa
+  namespace: juice-shop-test
